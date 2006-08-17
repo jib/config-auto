@@ -1,0 +1,76 @@
+0.18    Wed Jun 28 12:22:29 2006
+================================
+    - Address #19938 which states that calling parse()
+      on an xml config without XML::Simple installed
+      dies ungracefully. As of this version, better
+      diagnostics will be provided.
+
+0.17    Tue May  2 14:41:18 2006
+================================
+    - Improved YAML autodetection [#18241]
+
+0.15_01 Thu Aug 11 17:00:50 2005
+================================
+    - Added experimental YAML support
+
+0.14    Thu Aug 11 16:27:50 2005
+================================
+    - Fix uninitialized value warning
+    - Fix pod error
+    - Files under /etc we're not properly detected
+    - Fix casing of 'perl' in the Formats section of the pod
+    - Make formats be accepted in any casing
+
+
+0.13    Tue Jul 26 16:35:37 2005
+================================
+    - Add optional path support
+    - update test suite to test::more
+    - split tests by different formats
+    - Patch supplied by ssoriche@coloredblocks.net, tweaked and applied
+
+
+0.12    Thu Mar 10 14:58:06 2005
+================================
+    - extend do() diagnostics for perl files
+    - extend documentation
+
+0.11    Wed Nov 10 11:35:41 2004
+================================
+    - fix small thinko in file finding logic.
+
+0.10    Tue Aug 17 14:34:41 2004
+================================
+    - added support for fixed config file name.
+
+0.07 ???
+===================================
+    - added support for '/usr/local/etc/'
+
+0.06    Sat Feb 21 13:21:43 2004
+===================================
+    - fix a bug in tr/// on a string
+
+0.05    Tue Feb 10 13:16:59 2004
+===================================
+    - Fix so that a config file is magically found when the program
+        is started with a full pathname as well
+
+0.04    Sun Sep  7 19:28:40 2003
+====================================
+    - Jos Boumans took maintainership
+    - XML::Simple is now an optional module
+
+0.03    Sun Aug  4 09:51:42 2002
+====================================
+    - INI files patch by Garrett Rooney
+
+0.02    Thu Jul  4 17:20:13 2002
+====================================
+    - I always screw up the README.
+
+====================================
+0.01  Wed Jul  3 15:00:16 2002
+	- original version; created by h2xs 1.21 with options
+		-AX -n Config::Auto
+
