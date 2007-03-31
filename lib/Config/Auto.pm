@@ -513,18 +513,17 @@ file) or indicate the format in the parse() command.
 BIND9 and irssi file format parsers currently don't exist. It would be
 good to add support for C<mutt> and C<vim> style C<set>-based RCs.
 
+=head1 BUG REPORTS
+
+Please report bugs or other issues to E<lt>bug-config-auto@rt.cpan.orgE<gt>.
+
 =head1 AUTHOR
 
-This module by Jos Boumans, C<kane@cpan.org>.
+This module by Jos Boumans E<lt>kane@cpan.orgE<gt>.
 
-=head1 LICENSE
+=head1 COPYRIGHT
 
-This module is
-copyright (c) 2003-2006 Jos Boumans E<lt>kane@cpan.orgE<gt>.
-All rights reserved.
-
-This library is free software;
-you may redistribute and/or modify it under the same
-terms as Perl itself.
+This library is free software; you may redistribute and/or modify it 
+under the same terms as Perl itself.
 
 =cut
