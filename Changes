@@ -1,3 +1,9 @@
+0.20    Sat Apr  7 15:13:51 2007
+================================
+    - Address #25732: Close filehandles after parsing
+      Config::Auto wasn't closing it's filehandles after
+      reading from them. Now it does.
+
 0.18    Wed Jun 28 12:22:29 2006
 ================================
     - Address #19938 which states that calling parse()
