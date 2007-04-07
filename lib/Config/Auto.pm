@@ -10,7 +10,7 @@ use Carp;
 
 use vars qw[$VERSION $DisablePerl $Untaint $Format];
 
-$VERSION = '0.18';
+$VERSION = '0.20';
 $DisablePerl = 0;
 $Untaint = 0;
 
@@ -56,15 +56,15 @@ sub parse {
     if (!defined $args{format}) {
         # OK, let's take a look at you.
         my @data;
-        open CONFIG, $file or croak "$file: $!";
+        open my $config, $file or croak "$file: $!";
         if (-s $file > 1024*100) {
             # Just read in a bit.
-            while (<CONFIG>) {
+            while (<$config>) {
                 push @data, $_;
                 last if $. >= 50;
             }
         } else {
-            @data = <CONFIG>;
+            @data = <$config>;
         }
         my %scores = score(\@data);
 
@@ -221,9 +221,9 @@ sub irssi_style { croak "irssi-style config not supported in this release" }
 sub colon_sep {
 
     my $file = shift;
-    open IN, $file or die $!;
+    open my $in, $file or die $!;
     my %config;
-    while (<IN>) {
+    while (<$in>) {
         next if /^\s*#/;
         /^\s*(.*?)\s*:\s*(.*)/ or next;
         my ($k, $v) = ($1, $2);
@@ -285,9 +285,9 @@ sub check_hash_and_assign {
 
 sub equal_sep {
     my $file = shift;
-    open IN, $file or die $!;
+    open my $in, $file or die $!;
     my %config;
-    while (<IN>) {
+    while (<$in>) {
         next if /^\s*#/;
         /^\s*(.*?)\s*=\s*(.*)\s*$/ or next;
         my ($k, $v) = ($1, $2);
@@ -306,9 +306,9 @@ sub equal_sep {
 
 sub space_sep {
     my $file = shift;
-    open IN, $file or die $!;
+    open my $in, $file or die $!;
     my %config;
-    while (<IN>) {
+    while (<$in>) {
         next if /^\s*#/;
         /\s*(\S+)\s+(.*)/ or next;
         my ($k, $v) = ($1, $2);
