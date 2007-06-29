@@ -10,11 +10,11 @@ use Carp;
 
 use vars qw[$VERSION $DisablePerl $Untaint $Format];
 
-$VERSION = '0.20';
-$DisablePerl = 0;
-$Untaint = 0;
+$VERSION        = '0.20';
+$DisablePerl    = 0;
+$Untaint        = 0;
 
-my %methods = (
+my %Methods = (
     perl   => \&eval_perl,
     colon  => \&colon_sep,
     space  => \&space_sep,
@@ -29,7 +29,7 @@ my %methods = (
 
 ### make sure we give good diagnostics when XML::Simple is not available,
 ### but required to parse a config
-$methods{'xml'} = sub { croak "XML::Simple not available. Can not parse '@_'" }
+$Methods{'xml'} = sub { croak "XML::Simple not available. Can not parse '@_'" }
     unless eval { require XML::Simple; XML::Simple->import; 1 };
 
 sub parse {
@@ -78,13 +78,13 @@ sub parse {
         }
         $method = $methods[0];
     } else {
-        croak "Unknown format $args{format}: use one of @{[ keys %methods ]}"
-            if not exists $methods{ lc $args{format} };
+        croak "Unknown format $args{format}: use one of @{[ keys %Methods ]}"
+            if not exists $Methods{ lc $args{format} };
         $method = lc $args{format};
     }
 
     $Format = $method;
-    return $methods{$method}->($file);
+    return $Methods{$method}->($file);
 }
 
 sub score {
