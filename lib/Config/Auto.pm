@@ -136,6 +136,7 @@ sub score {
 
     # Choose between Win INI format and foo = bar
     if (exists $score{ini}) {
+        no warnings 'uninitialized';
         $score{ini} > $score{equal}
             ? delete $score{equal}
             : delete $score{ini};

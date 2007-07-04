@@ -14,6 +14,7 @@ t/config/passwd
 t/config/resolv.conf
 t/config/win.ini
 t/debconf.t
+t/invalid.t
 t/nsswitch.t
 t/passwd.t
 t/pod.t
