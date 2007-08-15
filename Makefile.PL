@@ -20,6 +20,7 @@ my $prereqs = {
     'Config::IniFiles'      => 0,
     'File::Spec::Functions' => 0,
     'Test::More'            => 0,
+    'Text::ParseWords'      => 0,
 };
 delete $prereqs->{'XML::Simple'} unless $opts->{'x'};             
 

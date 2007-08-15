@@ -2,11 +2,14 @@ package Config::Auto;
 
 use strict;
 use warnings;
-use File::Spec::Functions;
-use File::Basename;
-#use XML::Simple;   # this is now optional
-use Config::IniFiles;
+
 use Carp;
+use File::Basename;
+use Config::IniFiles;
+use File::Spec::Functions;
+use Text::ParseWords        qw[shellwords];
+
+#use XML::Simple;   # this is now optional
 
 use vars qw[$VERSION $DisablePerl $Untaint $Format];
 
@@ -283,20 +286,22 @@ sub check_hash_and_assign {
     }
 }
 
-
 sub equal_sep {
     my $file = shift;
     open my $in, $file or die $!;
     my %config;
     while (<$in>) {
-        next if /^\s*#/;
-        /^\s*(.*?)\s*=\s*(.*)\s*$/ or next;
+        next if     /^\s*#/;
+        next unless /^\s*(.*?)\s*=\s*(.*)\s*$/;
+
         my ($k, $v) = ($1, $2);
         my @v;
-        if ($v=~ /,/) {
+        
+        ### multiple enries, but no shell tokens?
+        if ($v=~ /,/ and $v !~ /(["']).*?,.*?\1/) {
             $config{$k} = [ split /\s*,\s*/, $v ];
-        } elsif ($v =~ / /) { # XXX: Foo = "Bar baz"
-            $config{$k} = [ split /\s+/, $v ];
+        } elsif ($v =~ /\s/) { # XXX: Foo = "Bar baz"
+            $config{$k} = [ shellwords($v) ];
         } else {
             $config{$k} = $v;
         }
@@ -310,14 +315,16 @@ sub space_sep {
     open my $in, $file or die $!;
     my %config;
     while (<$in>) {
-        next if /^\s*#/;
-        /\s*(\S+)\s+(.*)/ or next;
+        next if     /^\s*#/;
+        next unless /\s*(\S+)\s+(.*)/;
         my ($k, $v) = ($1, $2);
         my @v;
-        if ($v=~ /,/) {
+        
+        ### multiple enries, but no shell tokens?
+        if ($v=~ /,/ and $v !~ /(["']).*?,.*?\1/) {
             @v = split /\s*,\s*/, $v;
-        } elsif ($v =~ / /) { # XXX: Foo = "Bar baz"
-            @v = split /\s+/, $v;
+        } elsif ($v =~ /\s/) { # XXX: Foo = "Bar baz"
+            $config{$k} = [ shellwords($v) ];
         } else {
             @v = $v;
         }
