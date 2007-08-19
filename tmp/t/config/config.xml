@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+  <urlreader start="home.html" />
+  <main>
+    <title>test blocks</title>
+    <url>http://www.example.com</url>
+    <name>Tests &amp; Failures</name>
+  </main>
+</config>
