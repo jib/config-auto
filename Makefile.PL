@@ -21,6 +21,10 @@ my $prereqs = {
     'File::Spec::Functions' => 0,
     'Test::More'            => 0,
     'Text::ParseWords'      => 0,
+    'Object::Accessor'      => 0,
+    'Params::Check'         => 0,
+    'File::Temp'            => 0,
+    'IO::String'            => 0,
 };
 delete $prereqs->{'XML::Simple'} unless $opts->{'x'};             
 
