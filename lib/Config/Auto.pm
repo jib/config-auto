@@ -629,8 +629,16 @@ sub _check_hash_and_assign {
     if (grep /=/, @v) { # Bugger, it's really a hash
         for (@v) {
             my ($subkey, $subvalue);
-            if (/(.*)=(.*)/) { ($subkey, $subvalue) = ($1,$2); }
-            else { $subkey = $1; $subvalue = 1; }
+
+            ### If the array element has an equal sign in it...
+            if (/(.*)=(.*)/) { 
+                ($subkey, $subvalue) = ($1,$2); 
+            
+            ###...otherwise, if the array element does not contain an equals sign:
+            } else { 
+                $subkey     = $_; 
+                $subvalue   = 1; 
+            }
 
             if (exists $c->{$k} and ref $c->{$k} ne "HASH") {
                 # Can we find a hash in here?
