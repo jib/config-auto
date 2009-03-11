@@ -2,14 +2,10 @@ use strict;
 use warnings;
 use Test::More 'no_plan';
 
-### whitebox test, disabling XML::Simple
-{   package XML::Simple;
-    $INC{'XML/Simple.pm'} = $0;
-    
-    sub import { die };
-}
-
 my $Class = 'Config::Auto';
+
+### this includes a dummy XML::Simple that dies on import
+use lib 't/lib';
 
 use_ok( $Class );
 

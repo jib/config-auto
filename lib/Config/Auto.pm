@@ -3,25 +3,13 @@ package Config::Auto;
 use strict;
 use warnings;
 
-use Carp                    qw[croak];
-use File::Basename          qw[dirname basename];
-use Text::ParseWords        qw[shellwords];
-use Params::Check           qw[check];
+use Carp qw[croak];
 
-use IO::String;
-use File::Temp;
-use Object::Accessor;
-use Config::IniFiles;
-use File::Spec::Functions   qw[catfile];
-
-use base 'Object::Accessor';
-
-use vars qw[$VERSION $DisablePerl $Untaint $Verbose $Debug];
+use vars qw[$VERSION $DisablePerl $Untaint $Debug];
 
 $VERSION        = '0.29_01';
 $DisablePerl    = 0;
 $Untaint        = 0;
-$Verbose        = 1;
 $Debug          = 0;
 
 =head1 NAME
@@ -42,15 +30,19 @@ Config::Auto - Magical config file parser
     $config = Config::Auto::parse();
     
     ### Using the OO interface
-    $ca = Config::Auto->new( source => $text );
-    $ca = Config::Auto->new( source => $fh );
-    $ca = Config::Auto->new( source => $filename );
+    $ca     = Config::Auto->new( source => $text );
+    $ca     = Config::Auto->new( source => $fh );
+    $ca     = Config::Auto->new( source => $filename );
+    
+    $href   = $ca->score;           # compute the score for various formats
 
-    ### compute the score for various formats
-    $href   = $ca->score;
+    $config = $ca->parse;           # parse the config
 
-    ### parse the config
-    $config = $ca->parse;
+    $format = $ca->format;          # detected (or provided) config format        
+    $str    = $ca->as_string;       # config file stringified
+    $fh     = $ca->fh;              # config file handle
+    $file   = $ca->file;            # config filename    
+    $aref   = $ca->data;            # data from your config, split by newlines
 
 =cut
 
@@ -60,54 +52,10 @@ Config::Auto - Magical config file parser
 This module was written after having to write Yet Another Config File Parser
 for some variety of colon-separated config. I decided "never again".
 
-When you call C<< Config::Auto->new >> or C<Config::Auto::parse> with no 
-arguments, we first look at C<$0> to determine the program's name. Let's 
-assume that's C<snerk>. We look for the following files:
+Config::Auto aims to be the most C<DWIM> config parser available, by detecting
+configuration styles, include paths and even config filenames automagically.
 
-    snerkconfig
-    ~/snerkconfig
-    /etc/snerkconfig
-    /usr/local/etc/snerkconfig
-    
-    snerk.config
-    ~/snerk.config
-    /etc/snerk.config
-    /usr/local/etc/snerk.config
-    
-    snerkrc
-    ~/snerkrc
-    /etc/snerkrc
-    /usr/local/etc/snerkrc
-    
-    .snerkrc
-    ~/.snerkrc
-    /etc/.snerkrc
-    /usr/local/etc/.snerkrc
-
-Additional search paths can be specified with the C<path> option.
-
-We take the first one we find, and examine it to determine what format
-it's in. The algorithm used is a heuristic "which is a fancy way of
-saying that it doesn't work." (Mark Dominus.) We know about colon
-separated, space separated, equals separated, XML, Perl code, Windows
-INI, BIND9 and irssi style config files. If it chooses the wrong one,
-you can force it with the C<format> option.
-
-If you don't want it ever to detect and execute config files which are made
-up of Perl code, set C<$Config::Auto::DisablePerl = 1>.
-
-When using the perl format, your configuration file will be eval'd. This will
-cause taint errors. To avoid these warnings, set C<$Config::Auto::Untaint = 1>.
-This setting will not untaint the data in your configuration file and should only 
-be used if you trust the source of the filename.
-
-Then the file is parsed and a data structure is returned. Since we're
-working magic, we have to do the best we can under the circumstances -
-"You rush a miracle man, you get rotten miracles." (Miracle Max) So
-there are no guarantees about the structure that's returned. If you have
-a fairly regular config file format, you'll get a regular data
-structure back. If your config file is confusing, so will the return
-structure be. Isn't life tragic?
+See the L<HOW IT WORKS> section below on implementation details.
 
 =cut
 
@@ -156,13 +104,7 @@ my %Methods = (
     ini    => \&_parse_ini,
     list   => \&_return_list,
     yaml   => \&_yaml,
-
-    ### make sure we give good diagnostics when XML::Simple is not available,
-    ### but required to parse a config
-    xml    => eval { require XML::Simple; XML::Simple->import; 1 }
-                ? \&_parse_xml
-                : sub { croak "XML::Simple not available. Can not parse " . 
-                        shift->as_string }
+    xml    => \&_parse_xml,
 );
 
 sub formats { return keys %Methods }
@@ -185,16 +127,17 @@ Any plain string containing one or more newlines.
 
 =item a filename
 
-Any plain string.
+Any plain string pointing to a file on disk
 
 =item nothing
 
-A heuristic will be applied to find your config file, based on C<$0>.
+A heuristic will be applied to find your config file, based on the name of 
+your script; C<$0>.
 
 =back
 
 Although C<Config::Auto> is at its most magical when called with no parameters,
-its behavior can be reined in by use of one or two arguments.
+its behavior can be controlled explicitly by using one or two arguments.
 
 If a filename is passed as the C<source> argument, the same paths are checked, 
 but C<Config::Auto> will look for a file with the passed name instead of the 
@@ -210,36 +153,36 @@ the configuration file in the given format without trying to guess.
 
 =cut
 
-{   my $tmpl = {
-        format  => { allow  => [ keys %Methods ]    },
-        path    => { allow  => sub { !ref $_[0] or UNIVERSAL::isa( $_[0], 'ARRAY' ) } },
-        source  => { default        => '' },
-        _fh     => { no_override    => 1 },
-        _data   => { no_override    => 1 },
-        _file   => { no_override    => 1 },
-        _score  => { no_override    => 1 },
-        _tmp_fh => { no_override    => 1 }, # if we need to write temp files
-    };
-
-    sub new {
-        my $class   = shift;
-        my %hash    = @_;
-        
-        ### XXX more verbose errors under non-verbose?
-        my $args    = check( $tmpl, \%hash, $Verbose ) or return;
-        
-        my $self    = $class->SUPER::new;
-
-        ### create the accessors        
-        $self->mk_accessors( keys %$tmpl );
-        
-        ### set them to trusted values
-        for ( keys %$args ) {
-            $self->$_( $args->{$_} ) 
-        }
-        
-        return $self;    
+### generate accessors
+{   no strict 'refs';
+    for my $meth ( qw[format path source _fh _data _file _score _tmp_fh] ) { 
+        *$meth = sub {
+            my $self        = shift;
+            $self->{$meth}  = shift if @_;
+            return $self->{$meth};
+        };
     }
+}        
+
+sub new {
+    my $class   = shift;
+    my %hash    = @_;
+    my $self    = bless {}, $class;
+
+    if( my $format = $hash{'format'} ) {
+
+        ### invalid format
+        croak "No such format '$format'" unless $Methods{$format};
+        
+        $self->format( $format );
+    }
+
+    ### set the other values that could be passed
+    for my $key ( qw[source path] ) {
+        $self->$key( defined $hash{$key} ? $hash{$key} : '' );
+    }
+
+    return $self;    
 }
 
 =head2 $rv = $obj->parse | Config::Auto::parse( [$text|$fh|$filename, path => \@paths, format => FORMAT_NAME] );
@@ -268,7 +211,7 @@ sub parse {
     ### <21d48be50604271656n153e6db6m9b059f57548aaa32@mail.gmail.com>
     # If a config file "$file" contains multibyte charactors like japanese,
     # -B returns "true" in old version of perl such as 5.005_003. It seems
-    # there is no problem in perl 5.6x or older.
+    # there is no problem in perl 5.6x or newer.
     ### so check -B and only return only if 
     unless( $self->format ) {
         return if $self->file and -B $self->file and $] >= '5.006';
@@ -436,6 +379,8 @@ sub fh {
 
     ### data
     } elsif ( $src =~ /\n/ ) {
+        require IO::String;
+    
         my $fh = IO::String->new;
         print $fh $src;
         $fh->setpos(0);
@@ -475,6 +420,9 @@ sub file {
     ### so write a temp file
     if( ref $src or $src =~ /\n/ ) {
 
+        ### require only when needed
+        require File::Temp;
+        
         my $tmp = File::Temp->new;
         $tmp->print( ref $src ? <$src> : $src );
         $tmp->close;                    # write to disk
@@ -509,6 +457,16 @@ sub as_string {
 sub _find_file {
     my ($self, $file, $path) = @_;
 
+    
+    ### moved here so they are only loaded when looking for a file
+    ### all to keep memory usage down.
+    {   require File::Spec::Functions;
+        File::Spec::Functions->import('catfile');
+    
+        require File::Basename;
+        File::Basename->import(qw[dirname basename]);
+    }
+    
     my $bindir = dirname($0);
     my $whoami = basename($0);
 
@@ -563,11 +521,30 @@ sub _eval_perl   {
 
 sub _parse_xml   {
     my $self = shift;
-    return XMLin( $self->fh );
+        
+    ### Check if XML::Simple is already loaded
+    unless ( exists $INC{'XML/Simple.pm'} ) {
+        ### make sure we give good diagnostics when XML::Simple is not 
+        ### available, but required to parse a config
+        eval { require XML::Simple; XML::Simple->import; 1 };
+        croak "XML::Simple not available. Can not parse " . 
+              $self->as_string . "\nError: $@\n" if $@; 
+    }
+        
+    return XML::Simple::XMLin( $self->fh );
 }
 
 sub _parse_ini   { 
     my $self = shift;
+$DB::single = 1;
+    ### Check if XML::Simple is already loaded
+    unless ( exists $INC{'Config/IniFiles.pm'} ) {
+        ### make sure we give good diagnostics when XML::Simple is not 
+        ### available, but required to parse a config
+        eval { require Config::IniFiles; Config::IniFiles->import; 1 };
+        croak "Config::IniFiles not available. Can not parse " .
+              $self->as_string . "\nError: $@\n" if $@; 
+    }   
    
     tie my %ini, 'Config::IniFiles', ( -file => $self->file ); 
     return \%ini; 
@@ -580,11 +557,13 @@ sub _return_list {
     return [ grep { length } map { chomp; $_ } @{ $self->data } ];
 }
 
+### Changed to YAML::Any which selects the fastest YAML parser available 
+### (req YAML 0.67)
 sub _yaml { 
     my $self = shift;
-    require YAML; 
+    require YAML::Any; 
 
-    return YAML::Load( $self->as_string );
+    return YAML::Any::Load( $self->as_string );
 }
 
 sub _bind_style  { croak "BIND8-style config not supported in this release" }
@@ -666,56 +645,67 @@ sub _check_hash_and_assign {
     }
 }
 
-sub _equal_sep {
-    my $self = shift;
-    my $fh   = $self->fh;
+{   ### only load Text::ParseWords once;
+    my $loaded_tp;
     
-    my %config;    
-    while (<$fh>) {
-        next if     /^\s*#/;
-        next unless /^\s*(.*?)\s*=\s*(.*)\s*$/;
-
-        my ($k, $v) = ($1, $2);
-        my @v;
+    sub _equal_sep {
+        my $self = shift;
+        my $fh   = $self->fh;
         
-        ### multiple enries, but no shell tokens?
-        if ($v=~ /,/ and $v !~ /(["']).*?,.*?\1/) {
-            $config{$k} = [ split /\s*,\s*/, $v ];
-        } elsif ($v =~ /\s/) { # XXX: Foo = "Bar baz"
-            $config{$k} = [ shellwords($v) ];
-        } else {
-            $config{$k} = $v;
-        }
-    }
-
-    return \%config;
-}
-
-sub _space_sep {
-    my $self = shift;
-    my $fh   = $self->fh;
+        my %config;    
+        while (<$fh>) {
+            next if     /^\s*#/;
+            next unless /^\s*(.*?)\s*=\s*(.*)\s*$/;
     
-    my %config;
-    while (<$fh>) {
-        next if     /^\s*#/;
-        next unless /\s*(\S+)\s+(.*)/;
-        my ($k, $v) = ($1, $2);
-        my @v;
-        
-        ### multiple enries, but no shell tokens?
-        if ($v=~ /,/ and $v !~ /(["']).*?,.*?\1/) {
-            @v = split /\s*,\s*/, $v;
-        } elsif ($v =~ /\s/) { # XXX: Foo = "Bar baz"
-            $config{$k} = [ shellwords($v) ];
-        } else {
-            @v = $v;
+            my ($k, $v) = ($1, $2);
+            my @v;
+            
+            ### multiple enries, but no shell tokens?
+            if ($v=~ /,/ and $v !~ /(["']).*?,.*?\1/) {
+                $config{$k} = [ split /\s*,\s*/, $v ];
+            } elsif ($v =~ /\s/) { # XXX: Foo = "Bar baz"
+            
+                ### only load once
+                require Text::ParseWords unless $loaded_tp++;
+            
+                $config{$k} = [ Text::ParseWords::shellwords($v) ];
+            } else {
+                $config{$k} = $v;
+            }
         }
-        $self->_check_hash_and_assign(\%config, $k, @v);
+    
+        return \%config;
     }
-    return \%config;
+    
+    sub _space_sep {
+        my $self = shift;
+        my $fh   = $self->fh;
+        
+        my %config;
+        while (<$fh>) {
+            next if     /^\s*#/;
+            next unless /\s*(\S+)\s+(.*)/;
+            my ($k, $v) = ($1, $2);
+            my @v;
+            
+            ### multiple enries, but no shell tokens?
+            if ($v=~ /,/ and $v !~ /(["']).*?,.*?\1/) {
+                @v = split /\s*,\s*/, $v;
+            } elsif ($v =~ /\s/) { # XXX: Foo = "Bar baz"
+            
+                ### only load once
+                require Text::ParseWords unless $loaded_tp++;
 
+                $config{$k} = [ Text::ParseWords::shellwords($v) ];
+            } else {
+                @v = $v;
+            }
+            $self->_check_hash_and_assign(\%config, $k, @v);
+        }
+        return \%config;
+    
+    }
 }
-
 sub _debug {   
     my $self = shift;
     my $msg  = shift or return;
@@ -727,6 +717,80 @@ sub _debug {
 
 
 __END__
+
+=head1 GLOBAL VARIABLES
+
+=head3 $DisablePerl
+
+Set this variable to true if you do not wish to C<eval> perl style configuration
+files. 
+
+Default is C<false>
+
+=head3 $Untaint
+
+Set this variable to true if you automatically want to untaint values obtained
+from a perl style configuration. See L<perldoc perlsec> for details on tainting.
+
+Default is C<false>
+
+=head3 $Debug
+
+Set this variable to true to get extra debug information from C<Config::Auto>
+when finding and/or parsing config files fails.
+
+Default is C<false>
+
+=head1 HOW IT WORKS
+
+When you call C<< Config::Auto->new >> or C<Config::Auto::parse> with no 
+arguments, we first look at C<$0> to determine the program's name. Let's 
+assume that's C<snerk>. We look for the following files:
+
+    snerkconfig
+    ~/snerkconfig
+    /etc/snerkconfig
+    /usr/local/etc/snerkconfig
+    
+    snerk.config
+    ~/snerk.config
+    /etc/snerk.config
+    /usr/local/etc/snerk.config
+    
+    snerkrc
+    ~/snerkrc
+    /etc/snerkrc
+    /usr/local/etc/snerkrc
+    
+    .snerkrc
+    ~/.snerkrc
+    /etc/.snerkrc
+    /usr/local/etc/.snerkrc
+
+Additional search paths can be specified with the C<path> option.
+
+We take the first one we find, and examine it to determine what format
+it's in. The algorithm used is a heuristic "which is a fancy way of
+saying that it doesn't work." (Mark Dominus.) We know about colon
+separated, space separated, equals separated, XML, Perl code, Windows
+INI, BIND9 and irssi style config files. If it chooses the wrong one,
+you can force it with the C<format> option.
+
+If you don't want it ever to detect and execute config files which are made
+up of Perl code, set C<$Config::Auto::DisablePerl = 1>.
+
+When using the perl format, your configuration file will be eval'd. This will
+cause taint errors. To avoid these warnings, set C<$Config::Auto::Untaint = 1>.
+This setting will not untaint the data in your configuration file and should only 
+be used if you trust the source of the filename.
+
+Then the file is parsed and a data structure is returned. Since we're
+working magic, we have to do the best we can under the circumstances -
+"You rush a miracle man, you get rotten miracles." (Miracle Max) So
+there are no guarantees about the structure that's returned. If you have
+a fairly regular config file format, you'll get a regular data
+structure back. If your config file is confusing, so will the return
+structure be. Isn't life tragic?
 
 =head1 EXAMPLES
 
@@ -767,6 +831,11 @@ F</etc/nsswitch.conf>:
 
 =cut
 
+=head1 MEMORY USAGE
+
+This module is as light as possible on memory, only using modules when they
+are absolutely needed for configuration file parsing. 
+
 =head1 TROUBLESHOOTING
 
 =over 4
@@ -789,7 +858,9 @@ Please report bugs or other issues to E<lt>bug-config-auto@rt.cpan.orgE<gt>.
 
 =head1 AUTHOR
 
-This module by Jos Boumans E<lt>kane@cpan.orgE<gt>.
+Versions 0.04 and higher of this module by Jos Boumans E<lt>kane@cpan.orgE<gt>.
+
+This module originally by Simon Cozens.
 
 =head1 COPYRIGHT
 
