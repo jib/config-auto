@@ -1,3 +1,17 @@
+0.29_01 Wed Mar 11 13:51:31 2009
+================================
+    - Address #44018: Speed enhancements to only load modules if they are
+      actually needed. By Lyle Hopkins
+    - Address #32927: Hash key being assigned to $1 instead of $_
+    - Address #28608: Quoted parameters in Config::Auto
+      parsing now properly splits on quoted words, shell like
+    - Address #27686: an odd config format could throw uninitialized
+      value warnings
+    - Guts of Config::Auto rewritten to allow access to data in various
+      stages.
+    - Updates prereq list
+    - Increased test coverage
+
 0.20    Sat Apr  7 15:13:51 2007
 ================================
     - Address #25732: Close filehandles after parsing
