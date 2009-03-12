@@ -521,7 +521,7 @@ sub _eval_perl   {
 
 sub _parse_xml   {
     my $self = shift;
-        
+
     ### Check if XML::Simple is already loaded
     unless ( exists $INC{'XML/Simple.pm'} ) {
         ### make sure we give good diagnostics when XML::Simple is not 
@@ -531,13 +531,13 @@ sub _parse_xml   {
               $self->as_string . "\nError: $@\n" if $@; 
     }
         
-    return XML::Simple::XMLin( $self->fh );
+    return XML::Simple::XMLin( $self->as_string );
 }
 
 sub _parse_ini   { 
     my $self = shift;
-$DB::single = 1;
-    ### Check if XML::Simple is already loaded
+
+    ### Check if Config::IniFiles is already loaded
     unless ( exists $INC{'Config/IniFiles.pm'} ) {
         ### make sure we give good diagnostics when XML::Simple is not 
         ### available, but required to parse a config
