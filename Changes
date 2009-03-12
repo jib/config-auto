@@ -1,3 +1,11 @@
+0.29_02 Thu Mar 12 12:39:03 2009
+================================
+    - Not all versions of XML::Parser deal well with an IO::String filehandle;
+      pass the value in as string instead
+    - Fix a broken XML test
+    - Remove stray $DB::single = 1
+    - Don't delete XML tests, skip them
+
 0.29_01 Wed Mar 11 13:51:31 2009
 ================================
     - Address #44018: Speed enhancements to only load modules if they are
