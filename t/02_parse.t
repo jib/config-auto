@@ -82,7 +82,7 @@ nameserver 129.67.1.180
   </main>
 </config>
 ] =>    { main      => { title => 'test blocks', 
-                         url   => 'http://example.com',
+                         url   => 'http://www.example.com',
                          name  => 'Tests & Failures' },
           urlreader => { start => 'home.html' },
         },     
@@ -134,17 +134,19 @@ foo
 {   my %formats = map { $_ => $_ } $Class->formats;
 
     ### if we dont have xml support, don't try to test it.
-    unless ( eval { require XML::Simple; 1 } ) {
-        delete $Map->{'xml'};
-        delete $formats{'xml'};
-    }
+    my $skip_xml = eval { require XML::Simple; 1 } ? 0 : 1;
     
-    while( my($format,$href) = each %$Map ) {
+    while( my($format,$href) = each %$Map ) { SKIP: {
+        
         ok( 1,                  "Testing '$format' configs" );
-    
+
         ### we tested this one, remove it from the list
         ### if anything's left at the end, we failed at testing
         delete $formats{$format} if $formats{$format};
+
+        # 3 = amount of formats, 9 = amount of individual tests
+        skip( "No XML::Simple installed", 3 * 9 * scalar(keys %$href) ) 
+            if $format eq 'xml' and $skip_xml;
     
         while( my($text,$result) = each %$href ) {
             ### strip leading newline, we added it in the $Map for
@@ -206,7 +208,7 @@ foo
                 }
             }            
         }
-    }
+    } }
     
     {   ### TODO implementations, so remove them from the list:
         for ( qw[bind irssi] ) {
