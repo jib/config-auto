@@ -1,3 +1,7 @@
+0.30	Sun Jan 23 22:51:22 2011
+================================
+    - Apply a fix from Nigel Horne RT #65019
+
 0.29_02 Thu Mar 12 12:39:03 2009
 ================================
     - Not all versions of XML::Parser deal well with an IO::String filehandle;
