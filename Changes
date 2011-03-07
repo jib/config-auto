@@ -1,3 +1,8 @@
+0.32  Wed Feb 23 21:25:09 2011
+================================
+    - Fix a regression with space separated format
+      reported by Karel Petera RT #66050
+
 0.30	Sun Jan 23 22:51:22 2011
 ================================
     - Apply a fix from Nigel Horne RT #65019

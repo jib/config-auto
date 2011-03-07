@@ -7,7 +7,7 @@ use Carp qw[croak];
 
 use vars qw[$VERSION $DisablePerl $Untaint $Debug];
 
-$VERSION        = '0.30';
+$VERSION        = '0.32';
 $DisablePerl    = 0;
 $Untaint        = 0;
 $Debug          = 0;
@@ -668,7 +668,8 @@ sub _check_hash_and_assign {
                 ### only load once
                 require Text::ParseWords unless $loaded_tp++;
             
-                $config{$k} = [ Text::ParseWords::shellwords($v) ];
+                @v = Text::ParseWords::shellwords($v);
+
             } else {
                 $config{$k} = $v;
             }
@@ -696,7 +697,8 @@ sub _check_hash_and_assign {
                 ### only load once
                 require Text::ParseWords unless $loaded_tp++;
 
-                $config{$k} = [ Text::ParseWords::shellwords($v) ];
+                @v = Text::ParseWords::shellwords($v);
+
             } else {
                 @v = $v;
             }
