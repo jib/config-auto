@@ -13,13 +13,13 @@ my $Func = $Class->can('parse');
 
 my $Map = {
     # format    # key = text, value = expected result
-    colon   => {    
+    colon   => {
         qq[
 test: foo=bar
 test: baz
 quux: zoop
 ] =>    { test => { foo => 'bar', baz => 1 }, quux => 'zoop' },
-               
+
         qq[
 # /etc/nsswitch.conf
 #
@@ -42,7 +42,7 @@ bin:x:2:2:bin:/bin:/bin/sh
             bin     => [qw|x 2 2 bin    /bin        /bin/sh  |],
         },
     },
-    
+
 
     equal => {
         qq[
@@ -59,7 +59,7 @@ USE_GDKXFT=false
         qq[
 set foo "bar, baby"
 ] =>    { set => ['foo', 'bar, baby'] },
-        
+
         qq[
 search oucs.ox.ac.uk ox.ac.uk
 nameserver 163.1.2.1
@@ -69,7 +69,7 @@ nameserver 129.67.1.180
             nameserver  => [qw|163.1.2.1 129.67.1.1 129.67.1.180|],
         },
     },
-    
+
     xml => {
         qq[
 <?xml version="1.0" encoding="UTF-8"?>
@@ -81,12 +81,12 @@ nameserver 129.67.1.180
     <name>Tests &amp; Failures</name>
   </main>
 </config>
-] =>    { main      => { title => 'test blocks', 
+] =>    { main      => { title => 'test blocks',
                          url   => 'http://www.example.com',
                          name  => 'Tests & Failures' },
           urlreader => { start => 'home.html' },
-        },     
-    },                      
+        },
+    },
 
     yaml => {
         qq[
@@ -95,7 +95,7 @@ test:
   foo: bar
 ] =>    { test => { foo => 'bar' } },
     },
-    
+
     ini => {
         qq[
 [group1]
@@ -103,15 +103,15 @@ host = proxy.some-domain-name.com
 port = 80
 username = blah
 password = doubleblah
-] =>    { group1 => {   host        => 'proxy.some-domain-name.com', 
+] =>    { group1 => {   host        => 'proxy.some-domain-name.com',
                         port        => 80,
                         username    => 'blah',
                         password    => 'doubleblah' },
         },
-    },  
-    
+    },
+
     list => {
-        ### don't leave an empty trailing newline, it'll create an 
+        ### don't leave an empty trailing newline, it'll create an
         ### empty entry
         qq[
 foo
@@ -119,7 +119,7 @@ foo
 -baz
 ] =>    [ qw|foo +bar -baz| ],
     },
-    
+
     perl => {
         q[
 #!/usr/bin/perl
@@ -135,9 +135,9 @@ foo
 
     ### if we dont have xml support, don't try to test it.
     my $skip_xml = eval { require XML::Simple; 1 } ? 0 : 1;
-    
+
     while( my($format,$href) = each %$Map ) { SKIP: {
-        
+
         ok( 1,                  "Testing '$format' configs" );
 
         ### we tested this one, remove it from the list
@@ -145,99 +145,99 @@ foo
         delete $formats{$format} if $formats{$format};
 
         # 3 = amount of formats, 9 = amount of individual tests
-        skip( "No XML::Simple installed", 3 * 9 * scalar(keys %$href) ) 
+        skip( "No XML::Simple installed", 3 * 9 * scalar(keys %$href) )
             if $format eq 'xml' and $skip_xml;
-    
+
         while( my($text,$result) = each %$href ) {
             ### strip leading newline, we added it in the $Map for
             ### formatting purposes only.
             $text =~ s/^\n//;
-            
+
             ### first line to display in the test header
             my ($header) = ($text =~ /^(.+?)\n/);
-            
+
             ### 3 input mechanisms: text, fh and file
             ### create the latter 2 from the former
             my($fh,$file) = tempfile();
-            
+
             ### write the file
             {   print $fh $text;
                 $fh->close;
-            
+
                 ### reopen the FH for reading this time
                 open $fh, $file or warn "Could not reopen $file: $!";
             }
-            
-            my %src = ( 
-                text    => $text, 
-                fh      => $fh, 
-                file    => $file 
+
+            my %src = (
+                text    => $text,
+                fh      => $fh,
+                file    => $file
             );
-            
+
             while( my($desc, $src) = each %src ) {
                 ok( 1,          "   Passing '$desc' containing '$header'..." );
 
                 ### using OO
                 {   ### reset position if we're using a FH
                     seek $src, 0, 0 if ref $src;
-                
+
                     my $obj = $Class->new( source => $src );
-    
+
                     diag( "About to parse:\n$text" ) if $Verbose;
                     ok( $obj,   "       Object created" );
-                    
+
                     my $rv = eval { $obj->parse };
-        
+
                     ok( !$@,    "           No errors while parsing $@" );
                     ok( $obj->score,"           Scores assigned" );
                     is( $obj->format, $format,
                                 "           Right format detected" );
                     ok( $rv,    "           Text parsed" );
                     is_deeply( $rv, $result,
-                                "           Parsed correctly" );                               
+                                "           Parsed correctly" );
                 }
-                
+
                 ### using functional layer
                 {   ### reset position if we're using a FH
                     seek $src, 0, 0 if ref $src;
-                
+
                     my $rv = $Func->( $src );
                     ok( $rv,    "       Return value created from function call" );
                     is_deeply( $rv, $result,
                                 "           Parsed correctly" );
                 }
-            }            
+            }
         }
     } }
-    
+
     {   ### TODO implementations, so remove them from the list:
         for ( qw[bind irssi] ) {
             ok( delete $formats{$_},
                                 "No '$_' support yet" );
         }
-    
+
         my @left = keys %formats;
         ok( !scalar(@left),     "All formats tested (@left)" );
     }
-}    
+}
 
 ### try parsing perl with perl parsing disabled
 {   while( my($text,$expect) = each %{$Map->{'perl'}} ) {
         ok( 1,                  "Testing DisablePerl = 1" );
-    
+
         ### pesky warnings
         local $Config::Auto::DisablePerl = 1;
         local $Config::Auto::DisablePerl = 1;
-        
+
         ### strip leading newline, we added it in the $Map for
         ### formatting purposes only.
-        $text =~ s/^\n//;      
-        
+        $text =~ s/^\n//;
+
         my $rv = eval { $Func->( $text ) };
-        
+
         ok(!$rv,                "   No return value" );
         ok( $@,                 "   Exception thrown" );
         like( $@, qr/Unparsable file format/,
                                 "       No suitable parser found" );
     }
-}    
+}

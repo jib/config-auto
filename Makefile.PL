@@ -24,15 +24,15 @@ my $prereqs = {
     'File::Temp'            => 0,
     'IO::String'            => 0,
 };
-delete $prereqs->{'XML::Simple'} unless $opts->{'x'};             
+delete $prereqs->{'XML::Simple'} unless $opts->{'x'};
 
 WriteMakefile(
     'NAME'		        => 'Config::Auto',
     'VERSION_FROM'	    => 'lib/Config/Auto.pm', # finds $VERSION
-    'PREREQ_PM'		    => $prereqs, 
-    ( $] >= 5.005 
-        ? ( ABSTRACT_FROM    => 'lib/Config/Auto.pm', 
-            AUTHOR           => 'Jos I. Boumans <kane@cpan.org>') 
+    'PREREQ_PM'		    => $prereqs,
+    ( $] >= 5.005
+        ? ( ABSTRACT_FROM    => 'lib/Config/Auto.pm',
+            AUTHOR           => 'Jos I. Boumans <kane@cpan.org>')
         : ()
     ),
 );

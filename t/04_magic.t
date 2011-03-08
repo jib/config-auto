@@ -3,7 +3,7 @@ use warnings;
 use Test::More 'no_plan';
 
 BEGIN { chdir 't' if -d 't'; }
-    
+
 
 my $Class   = 'Config::Auto';
 
@@ -13,7 +13,7 @@ use_ok( $Class );
 {   my $obj = $Class->new( path => ['src'] );
     ok( $obj,                   "Object created" );
     isa_ok( $obj, $Class,       "   Object" );
-    
+
     my $file = $obj->file;
     ok( $file,                  "   File found: $file" );
     ok( -e $file,               "   File exists" );

@@ -11,8 +11,8 @@ use_ok( $Class );
 
 {   my $obj = $Class->new( source => $$.$/, format => 'xml' );
     ok( $obj,                   "Object created" );
-    
-    eval { $obj->parse }; 
+
+    eval { $obj->parse };
     ok( $@,                     "parse() on xml dies without XML::Simple" );
     like( $@, qr/XML::Simple/,  "   Error message is informative" );
 }
