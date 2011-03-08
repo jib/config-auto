@@ -7,7 +7,7 @@ use Carp qw[croak];
 
 use vars qw[$VERSION $DisablePerl $Untaint $Debug];
 
-$VERSION        = '0.32';
+$VERSION        = '0.34';
 $DisablePerl    = 0;
 $Untaint        = 0;
 $Debug          = 0;

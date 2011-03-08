@@ -1,3 +1,7 @@
+0.34  Tue Mar  8 15:02:06 2011
+    - Apply patch from Andrew Ruthven RT #66460
+      ( also Debian Bug # 617305 )
+
 0.32  Wed Feb 23 21:25:09 2011
 ================================
     - Fix a regression with space separated format
