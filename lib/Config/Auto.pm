@@ -207,6 +207,10 @@ sub parse {
                     or croak( "Could not parse '$self' => @_" );
     }
 
+    my $file = $self->file;
+    croak "No config file found!"           unless defined $file;
+    croak "Config file $file not readable!" unless -e $file;
+
     ### from Toru Marumoto: Config-Auto return undef if -B $file     
     ### <21d48be50604271656n153e6db6m9b059f57548aaa32@mail.gmail.com>
     # If a config file "$file" contains multibyte charactors like japanese,
