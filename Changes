@@ -1,4 +1,10 @@
+0.36  Fri Jul  1 14:38:57 2011
+================================
+    - Fix for RT 68913 reported by Michael Lackhoff
+      ( config files with DOS line endings do not work in Linux )
+
 0.34  Tue Mar  8 15:02:06 2011
+================================
     - Apply patch from Andrew Ruthven RT #66460
       ( also Debian Bug # 617305 )
 
