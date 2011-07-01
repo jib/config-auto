@@ -659,7 +659,7 @@ sub _check_hash_and_assign {
         my %config;
         while (<$fh>) {
             next if     /^\s*#/;
-            next unless /^\s*(.*?)\s*=\s*(.*)\s*$/;
+            next unless /^\s*(.*?)\s*=\s*(.*?)\s*$/;
 
             my ($k, $v) = ($1, $2);
             my @v;
