@@ -662,7 +662,6 @@ sub _check_hash_and_assign {
             next unless /^\s*(.*?)\s*=\s*(.*?)\s*$/;
 
             my ($k, $v) = ($1, $2);
-            my @v;
 
             ### multiple enries, but no shell tokens?
             if ($v=~ /,/ and $v !~ /(["']).*?,.*?\1/) {
@@ -672,7 +671,7 @@ sub _check_hash_and_assign {
                 ### only load once
                 require Text::ParseWords unless $loaded_tp++;
 
-                @v = Text::ParseWords::shellwords($v);
+                $config{$k} = [ Text::ParseWords::shellwords($v) ];
 
             } else {
                 $config{$k} = $v;
