@@ -580,6 +580,7 @@ sub _colon_sep {
     my $fh   = $self->fh;
 
     my %config;
+    local $_;
     while (<$fh>) {
         next if /^\s*#/;
         /^\s*(.*?)\s*:\s*(.*)/ or next;
@@ -657,7 +658,8 @@ sub _check_hash_and_assign {
         my $fh   = $self->fh;
 
         my %config;
-        while (<$fh>) {
+        local $_;
+        while ( <$fh>) {
             next if     /^\s*#/;
             next unless /^\s*(.*?)\s*=\s*(.*?)\s*$/;
 
@@ -686,6 +688,7 @@ sub _check_hash_and_assign {
         my $fh   = $self->fh;
 
         my %config;
+        local $_;
         while (<$fh>) {
             next if     /^\s*#/;
             next unless /\s*(\S+)\s+(.*)/;
