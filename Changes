@@ -1,3 +1,8 @@
+0.40  Mon Feb  6 21:19:29 2012
+================================
+    - Resolve RT 74711 reported by David Oswald
+      ( Calling Config::Auto::parse while $_ aliases a constant value throws exception )
+
 0.38  Mon Aug  8 21:38:10 2011
 ================================
     - Resolve RT 69984 reported by Thomas Johnson
