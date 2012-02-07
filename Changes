@@ -1,3 +1,7 @@
+0.42  Tue Feb  7 16:46:38 GMT 2012
+===================================
+  - Add a test fstab file instead of relying on the vagaries of system ones
+
 0.40  Mon Feb  6 21:19:29 2012
 ================================
     - Resolve RT 74711 reported by David Oswald

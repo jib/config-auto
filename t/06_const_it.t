@@ -1,11 +1,11 @@
 #!perl
 
-use Test::More;
+use Test::More 'no_plan';
 use strict;
 
 use Config::Auto;
 
-my $test_file = "/etc/fstab"; # A file found on any Unix/Linux machine.
+my $test_file = 't/fstab'; # A file found on any Unix/Linux machine.
 
 SKIP: {
     skip "Can't test: $test_file doesn't exist on this system."
@@ -18,5 +18,3 @@ SKIP: {
         diag($@) if $@;
     }
 }
-
-done_testing();

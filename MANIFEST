@@ -12,6 +12,7 @@ t/05_rt69984.t
 t/06_const_it.t
 t/20_XML_unvailable.t
 t/99_pod.t
+t/fstab
 t/lib/XML/Simple.pm
 t/src/04_magic.config
 t/src/05_rt69984.conf
