@@ -7,7 +7,7 @@ use Carp qw[croak];
 
 use vars qw[$VERSION $DisablePerl $Untaint $Debug];
 
-$VERSION        = '0.42';
+$VERSION        = '0.44';
 $DisablePerl    = 0;
 $Untaint        = 0;
 $Debug          = 0;
@@ -321,6 +321,10 @@ sub score {
         $score{perl} /= 2   unless ("@$data" =~ /;/) > 3 or $#$data < 3;
         delete $score{perl} unless ("@$data" =~ /;/);
         delete $score{perl} unless ("@$data" =~ /([\$\@\%]\w+)/);
+    }
+
+    if ( $score{equal} && $score{space} && $score{equal} == $score{space} ) {
+      $score{equal}++;
     }
 
     $self->_score( \%score );
