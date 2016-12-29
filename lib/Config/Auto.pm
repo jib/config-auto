@@ -192,7 +192,7 @@ structure representing your configuration file.
 
 You can also call it in a procedural context (C<Config::Auto::parse()>), where
 the first argument is the source, and the following arguments are named. This
-function is provided for backwards compatiblity with releases prior to 0.29.
+function is provided for backwards compatibility with releases prior to 0.29.
 
 =cut
 
